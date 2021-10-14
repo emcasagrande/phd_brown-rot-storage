@@ -36,7 +36,7 @@ mon.survival$rain7.bool = as.factor(1*(mon.survival$rain7>0))
 
 
 ## ********************* models to test
-cov.string = c("wd7", "weight_g.scale", "temp", "rain7.bool", "perc_rot", "cum_deg_day.scale", "t7", "tmin7", "tmax7")
+cov.string = c("wd7", "weight_g.scale", "temp", "rain7", "perc_rot", "cum_deg_day.scale", "t7", "tmin7", "tmax7")
 n_cov = length(cov.string)
 
 id_cov = unlist(  lapply(1:n_cov, function(i) combn(1:n_cov, i, simplify=FALSE) ), recursive=FALSE )
