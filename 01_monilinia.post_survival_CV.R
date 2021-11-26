@@ -15,7 +15,6 @@ n_cov = length(cov.string)
 id_cov = unlist(  lapply(1:n_cov, function(i) combn(1:n_cov, i, simplify=FALSE) ), recursive=FALSE )
 
 formula_cov = sapply(id_cov, function(i)   paste("Surv(time, status) ~",paste(cov.string[i],collapse="+")) )
-formula_cov.mpr = sapply(id_cov, function(i)   paste("Surv(time, status) ~ list(~",paste(cov.string[i],collapse="+"),",~1)") )
 ## ****************
 
 
@@ -37,17 +36,22 @@ formula_cov.mpr = sapply(id_cov, function(i)   paste("Surv(time, status) ~ list(
    ## ******************************************************************* ##
    ##                             AIC - BIC
    ## ******************************************************************* ##
-   mod.mpr = mpr( as.formula(formula_cov.mpr[x]),
-                       data = mon.survival,
-                       family = "Gompertz" ,
-                  hessian=F); 
    
-   npar  = mod.mpr$model$npar
-   model = mod.mpr$model$family
    
-   aic     = summary(mod.mpr)$model["aic"]
-   bic     = summary(mod.mpr)$model["bic"]
-   loglike = summary(mod.mpr)$model["loglike"]
+   mod.flxs = flexsurvreg( as.formula(formula_cov[x]),
+                                data = mon.survival,
+                               
+                                dist = "gompertz"); 
+   
+   npar  = mod.flxs$npars
+   ndata = dim(mon.survival)[1]
+   
+   aic     = mod.flxs$AIC
+   aic.C   = aic + (2*npar*(npar+1)/(ndata-npar-1)) 
+   loglike = mod.flxs$loglik
+   bic     = -(2*loglike) + (npar*log(ndata))
+
+   print(as.formula(formula_cov[x]))
    
    ## ******************************************************************* ##
    ##                Cross-Validation
@@ -89,8 +93,7 @@ formula_cov.mpr = sapply(id_cov, function(i)   paste("Surv(time, status) ~ list(
  }
  ## **************** ## 
  
- 
- res.cv = mclapply(X = 1:2, funct_cv.gompertz, mc.cores = 4, k.cv = k.cv )
+ res.cv = mclapply(X = 1:length(formula_cov), funct_cv.gompertz, mc.cores = 4, k.cv = k.cv )
  results.crossvalidation.db = mclapply(X = 1:length(formula_cov), funct_cv.gompertz, mc.cores = 4, k.cv = k.cv )
 
  save(results.crossvalidation.db, file = paste0("results.crossvalidation.db_", Sys.Date(),"_k",k.cv,"_median.RData") )
